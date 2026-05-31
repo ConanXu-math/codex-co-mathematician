@@ -13,6 +13,8 @@ When Cursor is operating in this repository:
 
 - The active Cursor Agent chat/session is the Project Coordinator.
 - The repository filesystem is the shared artifact store.
+- `agents/roles/` is the canonical role layer.
+- `.cursor/rules/co-mathematician-roles.mdc` is the Cursor adapter for those roles.
 - Separate Agent chats, fresh reviewer prompts, or available agent delegation features are workstream coordinators, specialized agents, and reviewers.
 - The harness only provides schemas, state files, gates, report skeletons, and validation scripts.
 - Do not build a new multi-agent platform here.
@@ -39,7 +41,7 @@ Hard rules:
 
 Cursor operating notes:
 
-- Read `AGENTS.md` and `.agents/skills/co-mathematician/SKILL.md` before running a research project.
+- Read `AGENTS.md`, `agents/roles/`, `.agents/skills/co-mathematician/SKILL.md`, and `.cursor/rules/co-mathematician-roles.mdc` before running a research project.
 - Use Agent mode to edit durable files under `workspace/`.
 - Use `co-math` only for initialization, message append, workstream creation, gate checks, and final rendering.
 - If native subagents are unavailable, create independent reviewer passes with fresh prompts and save reviewer outputs in `workspace/workstreams/<id>/reviews/`.

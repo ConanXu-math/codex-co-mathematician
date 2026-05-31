@@ -22,8 +22,10 @@ report skeletons, and validation scripts.
 - `AGENTS.md`: hard operating rules for Codex and other coding agents.
 - `CLAUDE.md`: Claude Code entry instructions.
 - `.cursor/rules/`: Cursor Agent rules.
+- `agents/roles/`: canonical, platform-neutral role cards.
 - `.agents/skills/co-mathematician/`: the Skill and reusable templates.
-- `.codex/`: narrow custom agent definitions for proof, computation, review, citation checking, and synthesis.
+- `.codex/`: Codex adapter definitions.
+- `.claude/agents/`: Claude Code adapter definitions.
 - `harness/co_math/`: a small Python harness for workspace state and gates.
 - `workspace/`: an empty scaffold for a new project.
 
@@ -57,9 +59,9 @@ right entry file before starting:
 
 | Agent | Entry files |
 | --- | --- |
-| Codex | `AGENTS.md`, `.agents/skills/co-mathematician/SKILL.md`, `.codex/config.toml` |
-| Claude Code | `CLAUDE.md`, `AGENTS.md`, `.agents/skills/co-mathematician/SKILL.md` |
-| Cursor | `.cursor/rules/co-mathematician.mdc`, `AGENTS.md`, `.agents/skills/co-mathematician/SKILL.md` |
+| Codex | `AGENTS.md`, `.agents/skills/co-mathematician/SKILL.md`, `agents/roles/`, `.codex/config.toml` |
+| Claude Code | `CLAUDE.md`, `AGENTS.md`, `.agents/skills/co-mathematician/SKILL.md`, `agents/roles/`, `.claude/agents/` |
+| Cursor | `.cursor/rules/co-mathematician.mdc`, `.cursor/rules/co-mathematician-roles.mdc`, `AGENTS.md`, `agents/roles/` |
 
 Suggested first prompt:
 
@@ -151,8 +153,18 @@ Allowed workstream kinds are `proof`, `computation`, `literature`, and `review`.
 
 ## Agent Roles
 
-The Project Coordinator may delegate narrow work to subagents, task agents, or
-separate reviewer passes:
+`agents/roles/` is the canonical role layer. Platform-specific files are
+adapters:
+
+```text
+agents/roles/       canonical role cards
+.codex/agents/      Codex adapter definitions
+.claude/agents/     Claude Code adapter definitions
+.cursor/rules/      Cursor rule-based adapter
+```
+
+The Project Coordinator may delegate narrow work to native subagents, task
+agents, Cursor Agent sessions, or separate reviewer passes:
 
 - `proof_explorer`: proof strategies, reductions, examples, and proof gaps.
 - `computational_experimenter`: scoped computations and reproducibility checks.

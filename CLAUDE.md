@@ -8,6 +8,8 @@ When Claude Code is operating in this repository:
 
 - The main Claude Code conversation is the Project Coordinator.
 - The repository filesystem is the shared artifact store.
+- `agents/roles/` is the canonical role layer.
+- `.claude/agents/` contains Claude Code adapters for the canonical roles.
 - Task agents or clearly separated reviewer passes are workstream coordinators, specialized agents, and reviewers.
 - The harness only provides schemas, state files, gates, report skeletons, and validation scripts.
 - Do not build a new multi-agent platform here.
@@ -36,6 +38,7 @@ Hard rules:
 
 - Treat this file and `AGENTS.md` as the repository-level contract.
 - Use the `co-mathematician` Skill if it is installed; otherwise follow `.agents/skills/co-mathematician/SKILL.md`.
+- Treat `agents/roles/` as authoritative role definitions; `.claude/agents/` is only the Claude Code adapter layer.
 - Use `co-math` commands only for workspace state, gates, and report rendering.
 - Use Claude Code Task/subagent-style delegation for narrow proof, computation, citation, logic-review, adversarial-review, or synthesis work when available.
 - If no delegation mechanism is available, run a separate reviewer pass from a fresh reviewer prompt and save the output in `workspace/workstreams/<id>/reviews/`.

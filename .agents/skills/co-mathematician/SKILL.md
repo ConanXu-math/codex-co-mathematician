@@ -16,9 +16,26 @@ gates, report skeletons, and validation.
 - In Claude Code, the main Claude Code conversation is the Project Coordinator.
 - In Cursor, the active Agent chat/session is the Project Coordinator.
 - The repository filesystem is the shared artifact store.
-- Native subagents, task agents, or separate reviewer passes are workstream coordinators, specialized agents, and reviewers.
+- `agents/roles/` is the canonical role layer.
+- `.codex/agents/`, `.claude/agents/`, and `.cursor/rules/` are platform adapters.
+- Native subagents, task agents, Cursor Agent sessions, or separate reviewer passes are workstream coordinators, specialized agents, and reviewers.
 - If native subagents are unavailable, create an independent reviewer pass with a fresh prompt and save the review artifact under the workstream `reviews/` directory.
 - No agent may self-approve its own report.
+
+## Adapter Architecture
+
+Use `agents/roles/` as the authoritative role definitions. Platform-specific
+adapters may use different formats, but must preserve the same boundaries:
+
+```text
+agents/roles/       canonical role cards
+.codex/agents/      Codex TOML adapters
+.claude/agents/     Claude Code Markdown subagent adapters
+.cursor/rules/      Cursor project-rule adapters
+```
+
+Adapters must not approve goals, start unapproved workstreams, mark workstreams
+complete, or let a report author approve their own report.
 
 ## Non-Negotiable Flow
 

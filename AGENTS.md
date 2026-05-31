@@ -10,7 +10,9 @@ The coding agent is the driver:
 - In Claude Code, the main Claude Code conversation is the Project Coordinator.
 - In Cursor, the active Agent chat/session is the Project Coordinator.
 - The repository filesystem is the shared artifact store.
-- Native subagents, task agents, or separate reviewer passes are workstream coordinators, specialized agents, and reviewers.
+- `agents/roles/` is the canonical role layer.
+- `.codex/agents/`, `.claude/agents/`, and `.cursor/rules/` are platform adapters.
+- Native subagents, task agents, Cursor Agent sessions, or separate reviewer passes are workstream coordinators, specialized agents, and reviewers.
 - The harness only provides schemas, state files, gates, report skeletons, and validation scripts.
 - Do not build a new multi-agent platform here.
 - Do not start a mathematical research project during workspace initialization.
@@ -33,11 +35,25 @@ The coding agent is the driver:
 This workspace is intended to work after cloning in Codex, Claude Code, Cursor,
 or another repository-aware coding agent.
 
-- Codex should read `AGENTS.md`, `.codex/config.toml`, and the custom agent definitions in `.codex/agents/`.
-- Claude Code should read `CLAUDE.md` and may use Task/subagent-style delegation for workstreams and reviews.
-- Cursor should read `.cursor/rules/co-mathematician.mdc` and use Agent mode with durable file edits.
+- Codex should read `AGENTS.md`, `agents/roles/`, `.codex/config.toml`, and `.codex/agents/`.
+- Claude Code should read `CLAUDE.md`, `agents/roles/`, and `.claude/agents/`.
+- Cursor should read `.cursor/rules/co-mathematician.mdc`, `.cursor/rules/co-mathematician-roles.mdc`, and `agents/roles/`.
 - If an environment has no native subagent feature, the Project Coordinator must still create an independent review pass with a fresh prompt and save the review artifact under the workstream `reviews/` directory.
 - No agent may self-approve its own workstream report.
+
+## Adapter Architecture
+
+`agents/roles/` contains the platform-neutral role definitions. Treat those role
+cards as authoritative. Platform-specific adapters may use different file
+formats, but they must preserve the same role IDs, responsibilities, boundaries,
+and reviewer gates.
+
+```text
+agents/roles/       canonical role cards
+.codex/agents/      Codex TOML adapters
+.claude/agents/     Claude Code Markdown subagent adapters
+.cursor/rules/      Cursor project-rule adapters
+```
 
 ## Language Policy
 
