@@ -2,66 +2,72 @@
 
 > [English](README.md) | 中文
 
-一个轻量级、由 coding agent 驱动的 Co-Mathematician 数学研究工作区模式。它的目标是：
-Codex、Claude Code、Cursor 或其他能读写仓库的 coding agent clone 之后，
-都能知道如何启动和使用。
+Co-Mathematician 是一个轻量级、由 coding agent 驱动的数学研究工作区模式。
+它的目标是：Codex、Claude Code、Cursor 或其他能读写仓库的 coding agent
+clone 之后，都能知道如何开始工作。
+
+核心想法很简单：
+
+```text
+coding agent + repo filesystem + gates + reviewer loop = research workspace
+```
 
 本项目受 Google DeepMind
-[AI Co-Mathematician 论文](https://arxiv.org/abs/2605.06651)中公开设计原则启发，
-但**不是**对其系统的复现。本项目将这些思想改写为一个 coding-agent-native、基于文件系统的
-轻量工作流。
+[AI Co-Mathematician 论文](https://arxiv.org/abs/2605.06651)中的公开设计原则启发，
+但**不是**对其系统的复现。
 
-本仓库**不是**新的多 agent 平台。coding agent 本身就是 driver；仓库文件系统
-就是 shared artifact store；原生 subagents、task agents 或独立 reviewer pass
-扮演 workstream coordinator、specialist 和 reviewer；harness 只负责 schema、
-状态、gating、报告骨架和验证脚本。
+## 这是什么
 
-## 包含什么
+- 一个用于数学研究项目的 stateful workspace。
+- 一组给 coding agent 使用的硬规则。
+- 一个平台中立的角色层，以及 Codex、Claude Code、Cursor adapter。
+- 一个小型 Python harness，用于初始化、状态文件、gates、messages 和 final report rendering。
 
-- `AGENTS.md`：Codex 和其他 coding agent 的硬规则。
-- `CLAUDE.md`：Claude Code 入口说明。
-- `.cursor/rules/`：Cursor Agent 规则。
-- `agents/roles/`：canonical、平台中立的角色卡。
-- `.agents/skills/co-mathematician/`：Skill 和可复用模板。
-- `.codex/`：Codex adapter definitions。
-- `.claude/agents/`：Claude Code adapter definitions。
-- `harness/co_math/`：用于 workspace 状态和 gates 的小型 Python harness。
-- `workspace/`：新项目的空 scaffold。
+## 这不是什么
 
-## 不包含什么
+- 不是新的 multi-agent platform。
+- 不是 Web app。
+- 不是 autonomous theorem-proving system。
+- 不包含已解决的研究项目或论文库。
+- 不替代 coding agent。coding agent 本身就是 driver。
 
-- 不包含已解决的研究项目。
-- 不包含下载的论文库。
-- 不包含外部仓库快照。
-- 不包含 Web app 或 agent runtime。
-- 不包含 proprietary prompts 或私有系统内容。
+## 架构
 
-## 安装
+Co-Mathematician 把 canonical role definitions 和平台特定 adapters 分开：
 
-支持 Python 3.9+。
-
-```bash
-python3 -m pip install -e .
-co-math --help
+```text
+agents/roles/       canonical, platform-neutral role cards
+.codex/agents/      Codex TOML adapters
+.claude/agents/     Claude Code Markdown subagent adapters
+.cursor/rules/      Cursor project-rule adapters
 ```
 
-不安装也可以运行：
+仓库文件系统是 shared artifact store。harness 不负责运行 agents；它只提供 schema、
+状态文件、gates、报告骨架和验证脚本。
+
+## Adapter Matrix
+
+| Coding agent | 优先读取 | Native adapter |
+| --- | --- | --- |
+| Codex | `AGENTS.md`、`.agents/skills/co-mathematician/SKILL.md`、`agents/roles/` | `.codex/config.toml`、`.codex/agents/*.toml` |
+| Claude Code | `CLAUDE.md`、`AGENTS.md`、`agents/roles/` | `.claude/agents/*.md` |
+| Cursor | `.cursor/rules/co-mathematician.mdc`、`.cursor/rules/co-mathematician-roles.mdc`、`agents/roles/` | Cursor project rules 和 focused Agent sessions |
+
+如果某个 coding-agent 环境没有原生 subagent 功能，就用 fresh reviewer prompt
+或独立 session，并把 review 保存到 workstream 的 `reviews/` 目录。
+
+## Quick Start
+
+clone 仓库，并在你的 coding agent 中打开：
 
 ```bash
-PYTHONPATH=. python3 -m harness.co_math.cli --help
+git clone https://github.com/ConanXu-math/co-mathematician.git
+cd co-mathematician
+python3 -m pip install -e ".[dev]"
+co-math init --workspace workspace
 ```
 
-## 在 Coding Agent 里使用
-
-clone 仓库后，在你的 coding agent 里打开项目，并让 agent 先读取对应入口文件：
-
-| Agent | 入口文件 |
-| --- | --- |
-| Codex | `AGENTS.md`、`.agents/skills/co-mathematician/SKILL.md`、`agents/roles/`、`.codex/config.toml` |
-| Claude Code | `CLAUDE.md`、`AGENTS.md`、`.agents/skills/co-mathematician/SKILL.md`、`agents/roles/`、`.claude/agents/` |
-| Cursor | `.cursor/rules/co-mathematician.mdc`、`.cursor/rules/co-mathematician-roles.mdc`、`AGENTS.md`、`agents/roles/` |
-
-推荐第一条 prompt：
+然后给 coding agent 第一条 prompt：
 
 ```text
 Use this repository as a coding-agent-driven AI Co-Mathematician workspace.
@@ -73,36 +79,38 @@ a workstream, and do not mark anything complete until the required goal approval
 and reviewer gates pass.
 ```
 
-随后 agent 应运行：
+不安装 package 也可以运行：
 
 ```bash
-python3 -m pip install -e ".[dev]"
-co-math init --workspace workspace
+PYTHONPATH=. python3 -m harness.co_math.cli --help
 ```
 
-## 使用 Skill
-
-让 coding agent 使用 `co-mathematician` Skill，或直接遵循本仓库里的
-`.agents/skills/co-mathematician/SKILL.md`。流程是：
+## 工作流
 
 ```text
 onboarding -> research question formalization -> goal approval -> workstreams -> reviewer loop -> final working paper
 ```
 
-核心规则很简单：用户明确 approve goal 之前，不得启动 workstream；workstream report
-未通过独立 reviewer 审查之前，不得标记 complete。如果当前 agent 环境没有原生
-subagent 功能，就用一个 fresh prompt 做独立 reviewer pass，并把 review 保存到
-workstream 的 `reviews/` 目录。
+硬 gates：
 
-## 开始一个新项目
+- onboarding 必须在 goal approval 之前。
+- 只有用户明确 approved 的 goals 才能启动 workstreams。
+- 重要 claims 必须有 provenance。
+- failed explorations 是 durable artifacts，不是垃圾。
+- uncertainty 必须在 reports 和 status updates 中显式暴露。
+- 每个 workstream report 都必须经过独立 reviewer。
+- review 未通过会阻塞 completion。
+- final output 是 working paper，不是聊天总结。
 
-初始化 workspace：
+## 开始项目
+
+初始化 scaffold：
 
 ```bash
 co-math init --workspace workspace
 ```
 
-onboarding 阶段，Project Coordinator 应更新：
+Project Coordinator 随后更新：
 
 ```text
 workspace/project/PROJECT.md
@@ -111,24 +119,20 @@ workspace/project/PROJECT_STATUS.md
 workspace/project/messages.jsonl
 ```
 
-onboarding 的第一个偏好问题应该是文档语言策略。推荐选项：
+onboarding 的第一个偏好问题应该是文档语言策略：
 
 1. 所有 workspace documents 都用英文。
 2. research notes 用用户语言，schemas、gates、reviews 用英文。
 3. 所有人类可读 research documents 都用用户语言。
 4. 跟随每个 project 或 conversation 的语言。
 
-把用户选择写入 `PROJECT.md`、`PROJECT_STATUS.md` 和 `GOALS.yaml` 的
-`language_policy` 区块。schema keys、gate names、statuses 和 harness commands
-保持英文。
-
-draft goal 不可执行。只有当 goal 状态恰好是下面这样，才能启动 workstream：
+draft goal 不可执行。只有当 goal 状态是下面这样，才能启动 workstream：
 
 ```yaml
 status: approved
 ```
 
-检查 goal approval：
+检查 approval gate：
 
 ```bash
 co-math check-gate --workspace workspace --gate goal_approval --goal-id G1
@@ -146,19 +150,9 @@ co-math new-workstream \
 
 允许的 workstream kind 是 `proof`、`computation`、`literature` 和 `review`。
 
-## Agent 角色
+## Role Cards
 
-`agents/roles/` 是 canonical role layer。平台特定文件只是 adapter：
-
-```text
-agents/roles/       canonical role cards
-.codex/agents/      Codex adapter definitions
-.claude/agents/     Claude Code adapter definitions
-.cursor/rules/      Cursor rule-based adapter
-```
-
-Project Coordinator 可以把窄任务委派给原生 subagents、task agents、Cursor Agent
-sessions 或独立 reviewer pass：
+canonical roles 位于 `agents/roles/`：
 
 - `proof_explorer`：证明路线、归约、例子和 proof gaps。
 - `computational_experimenter`：有边界的计算实验和可复现性检查。
@@ -179,6 +173,20 @@ co-math new-workstream --workspace workspace --goal-id G1 --title "..." --kind p
 co-math check-gate --workspace workspace --gate goal_approval --goal-id G1
 co-math check-gate --workspace workspace --gate workstream_completion --workstream-id WS-G1-001-example
 co-math render-final --workspace workspace
+```
+
+## 仓库结构
+
+```text
+AGENTS.md
+CLAUDE.md
+.agents/skills/co-mathematician/
+agents/roles/
+.codex/
+.claude/
+.cursor/
+harness/co_math/
+workspace/
 ```
 
 ## 测试

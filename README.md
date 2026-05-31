@@ -2,68 +2,75 @@
 
 > English | [中文](README.zh-CN.md)
 
-A lightweight, coding-agent-driven Co-Mathematician workspace pattern for mathematical research.
-It is designed to work after cloning in Codex, Claude Code, Cursor, or another
-repository-aware coding agent.
+Co-Mathematician is a lightweight, coding-agent-driven workspace pattern for
+mathematical research. It is meant to be cloned and used inside Codex, Claude
+Code, Cursor, or another repository-aware coding agent.
 
-This project is inspired by the public design principles described in Google
-DeepMind's [AI Co-Mathematician paper](https://arxiv.org/abs/2605.06651), but
-it is **not** a reproduction of their system. It adapts those ideas into a
-coding-agent-native, filesystem-based workflow.
+The core idea is simple:
 
-This repository does **not** implement a new multi-agent platform. The coding
-agent is the driver, the repository filesystem is the shared artifact store,
-native subagents or independent reviewer passes act as workstream coordinators,
-specialists, and reviewers, and the harness only provides schema, state, gating,
-report skeletons, and validation scripts.
-
-## What Is Included
-
-- `AGENTS.md`: hard operating rules for Codex and other coding agents.
-- `CLAUDE.md`: Claude Code entry instructions.
-- `.cursor/rules/`: Cursor Agent rules.
-- `agents/roles/`: canonical, platform-neutral role cards.
-- `.agents/skills/co-mathematician/`: the Skill and reusable templates.
-- `.codex/`: Codex adapter definitions.
-- `.claude/agents/`: Claude Code adapter definitions.
-- `harness/co_math/`: a small Python harness for workspace state and gates.
-- `workspace/`: an empty scaffold for a new project.
-
-## What Is Not Included
-
-- No solved research project.
-- No downloaded paper corpus.
-- No external repository snapshots.
-- No web app or agent runtime.
-- No proprietary prompts or private systems.
-
-## Install
-
-Python 3.9+ is supported.
-
-```bash
-python3 -m pip install -e .
-co-math --help
+```text
+coding agent + repo filesystem + gates + reviewer loop = research workspace
 ```
 
-Without installing:
+This project is inspired by public design principles from Google DeepMind's
+[AI Co-Mathematician paper](https://arxiv.org/abs/2605.06651), but it is **not**
+a reproduction of their system.
 
-```bash
-PYTHONPATH=. python3 -m harness.co_math.cli --help
+## What This Is
+
+- A stateful workspace for mathematical research projects.
+- A set of hard operating rules for coding agents.
+- A platform-neutral role layer with Codex, Claude Code, and Cursor adapters.
+- A small Python harness for initialization, state files, gates, messages, and final report rendering.
+
+## What This Is Not
+
+- Not a new multi-agent platform.
+- Not a web app.
+- Not an autonomous theorem-proving system.
+- Not a solved research project or paper corpus.
+- Not a replacement for a coding agent. The coding agent is the driver.
+
+## Architecture
+
+Co-Mathematician separates canonical role definitions from platform-specific
+agent adapters:
+
+```text
+agents/roles/       canonical, platform-neutral role cards
+.codex/agents/      Codex TOML adapters
+.claude/agents/     Claude Code Markdown subagent adapters
+.cursor/rules/      Cursor project-rule adapters
 ```
 
-## Use With A Coding Agent
+The repository filesystem is the shared artifact store. The harness does not run
+agents; it only provides schema, state files, gates, report skeletons, and
+validation scripts.
 
-Clone the repository, open it in your coding agent, and ask the agent to read the
-right entry file before starting:
+## Adapter Matrix
 
-| Agent | Entry files |
-| --- | --- |
-| Codex | `AGENTS.md`, `.agents/skills/co-mathematician/SKILL.md`, `agents/roles/`, `.codex/config.toml` |
-| Claude Code | `CLAUDE.md`, `AGENTS.md`, `.agents/skills/co-mathematician/SKILL.md`, `agents/roles/`, `.claude/agents/` |
-| Cursor | `.cursor/rules/co-mathematician.mdc`, `.cursor/rules/co-mathematician-roles.mdc`, `AGENTS.md`, `agents/roles/` |
+| Coding agent | Reads first | Native adapter |
+| --- | --- | --- |
+| Codex | `AGENTS.md`, `.agents/skills/co-mathematician/SKILL.md`, `agents/roles/` | `.codex/config.toml`, `.codex/agents/*.toml` |
+| Claude Code | `CLAUDE.md`, `AGENTS.md`, `agents/roles/` | `.claude/agents/*.md` |
+| Cursor | `.cursor/rules/co-mathematician.mdc`, `.cursor/rules/co-mathematician-roles.mdc`, `agents/roles/` | Cursor project rules and focused Agent sessions |
 
-Suggested first prompt:
+If a coding-agent environment has no native subagent feature, use a fresh
+reviewer prompt or separate session and save the review under the workstream
+`reviews/` directory.
+
+## Quick Start
+
+Clone the repository and open it in your coding agent:
+
+```bash
+git clone https://github.com/ConanXu-math/co-mathematician.git
+cd co-mathematician
+python3 -m pip install -e ".[dev]"
+co-math init --workspace workspace
+```
+
+Then give your coding agent this first prompt:
 
 ```text
 Use this repository as a coding-agent-driven AI Co-Mathematician workspace.
@@ -75,37 +82,38 @@ a workstream, and do not mark anything complete until the required goal approval
 and reviewer gates pass.
 ```
 
-The agent should then run:
+Without installing the package, use:
 
 ```bash
-python3 -m pip install -e ".[dev]"
-co-math init --workspace workspace
+PYTHONPATH=. python3 -m harness.co_math.cli --help
 ```
 
-## Use The Skill
-
-Ask your coding agent to use the `co-mathematician` Skill or the local
-instructions in `.agents/skills/co-mathematician/SKILL.md`. The workflow is:
+## Workflow
 
 ```text
 onboarding -> research question formalization -> goal approval -> workstreams -> reviewer loop -> final working paper
 ```
 
-The core rule is simple: no workstream starts until the user explicitly approves
-a goal, and no workstream is complete until an independent reviewer approves its
-report. If the agent environment has no native subagent feature, use a separate
-reviewer pass with a fresh prompt and save that review under the workstream
-`reviews/` directory.
+Hard gates:
 
-## Start A New Project
+- Onboarding comes before goal approval.
+- Workstreams may start only for explicitly approved goals.
+- Important claims require provenance.
+- Failed explorations are durable artifacts, not trash.
+- Uncertainty must be visible in reports and status updates.
+- Every workstream report requires an independent reviewer.
+- A failed review blocks completion.
+- The final output is a working paper, not a chat summary.
 
-Initialize a workspace:
+## Starting A Project
+
+Initialize the scaffold:
 
 ```bash
 co-math init --workspace workspace
 ```
 
-During onboarding, the Project Coordinator should update:
+The Project Coordinator then updates:
 
 ```text
 workspace/project/PROJECT.md
@@ -114,26 +122,21 @@ workspace/project/PROJECT_STATUS.md
 workspace/project/messages.jsonl
 ```
 
-The first onboarding preference should be the document language policy. Suggested
-options:
+The first onboarding preference should be the document language policy:
 
 1. English for all workspace documents.
 2. User language for research notes, English for schemas, gates, and reviews.
 3. User language for all human-readable research documents.
 4. Match each project or conversation.
 
-Record the selected policy in `PROJECT.md`, `PROJECT_STATUS.md`, and the
-`language_policy` block of `GOALS.yaml`. Schema keys, gate names, statuses, and
-harness commands stay in English.
-
 Draft goals are not executable. A goal can receive workstreams only when its
-status is exactly:
+status is:
 
 ```yaml
 status: approved
 ```
 
-Check approval:
+Check the approval gate:
 
 ```bash
 co-math check-gate --workspace workspace --gate goal_approval --goal-id G1
@@ -151,20 +154,9 @@ co-math new-workstream \
 
 Allowed workstream kinds are `proof`, `computation`, `literature`, and `review`.
 
-## Agent Roles
+## Role Cards
 
-`agents/roles/` is the canonical role layer. Platform-specific files are
-adapters:
-
-```text
-agents/roles/       canonical role cards
-.codex/agents/      Codex adapter definitions
-.claude/agents/     Claude Code adapter definitions
-.cursor/rules/      Cursor rule-based adapter
-```
-
-The Project Coordinator may delegate narrow work to native subagents, task
-agents, Cursor Agent sessions, or separate reviewer passes:
+Canonical roles live in `agents/roles/`:
 
 - `proof_explorer`: proof strategies, reductions, examples, and proof gaps.
 - `computational_experimenter`: scoped computations and reproducibility checks.
@@ -185,6 +177,20 @@ co-math new-workstream --workspace workspace --goal-id G1 --title "..." --kind p
 co-math check-gate --workspace workspace --gate goal_approval --goal-id G1
 co-math check-gate --workspace workspace --gate workstream_completion --workstream-id WS-G1-001-example
 co-math render-final --workspace workspace
+```
+
+## Repository Layout
+
+```text
+AGENTS.md
+CLAUDE.md
+.agents/skills/co-mathematician/
+agents/roles/
+.codex/
+.claude/
+.cursor/
+harness/co_math/
+workspace/
 ```
 
 ## Tests
